@@ -1,0 +1,37 @@
+name: Candidate Name
+location: City, timezone
+remote_only: true
+relocation: false
+business_trips: false
+english:
+  level: B1
+  writing: confident
+  speaking: basic
+experience:
+  current_role: Current Role
+  company: Current Company
+  since: YYYY-MM
+  years: 1.5
+salary_targets:
+  ai_automation:
+    rub_month: 100000
+    usd_month_min: 2000
+    usd_hour_min: 15
+  outreach:
+    rub_month: 80000
+    usd_month_min: 1300
+    usd_hour_min: 8
+  link_builder:
+    rub_month: 80000
+    usd_month_min: 1000
+    usd_hour_min: 6
+strengths:
+  - Python
+  - LLM APIs
+  - outreach
+  - link building
+  - SEO metrics
+limits:
+  - Do not overstate English level.
+  - Do not claim unverified tools or experience.
+  - Do not claim office, relocation, or business trips if unavailable.

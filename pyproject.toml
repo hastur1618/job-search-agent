@@ -1,0 +1,14 @@
+[project]
+name = "job-search-agent"
+version = "0.1.0"
+description = "Local database and automation assistant for job search tracking."
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+job-agent = "job_agent.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+

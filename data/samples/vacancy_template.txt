@@ -1,0 +1,22 @@
+Просто вставь сюда вакансию как есть.
+
+Можно вместе со ссылкой:
+https://example.com/vacancy
+
+Например:
+
+AI Automation Specialist
+Example Company
+
+Удалённая работа
+Зарплата: 100000-150000 RUB
+
+Обязанности:
+- Автоматизировать процессы в n8n и Python
+- Работать с API и Google Sheets
+
+Требования:
+- Python
+- n8n
+- OpenAI API
+

@@ -1,0 +1,19 @@
+https://hh.ru/vacancy/123456
+
+AI Automation Specialist
+Example Company
+
+Удалённая работа
+Зарплата: 100000-150000 RUB
+
+Обязанности:
+- Автоматизировать процессы в n8n и Python
+- Работать с API и Google Sheets
+- Настраивать интеграции с OpenAI API
+
+Требования:
+- Python
+- n8n
+- REST API
+- Английский для чтения документации
+
