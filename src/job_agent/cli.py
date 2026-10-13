@@ -15,6 +15,7 @@ from job_agent.database import (
     cleanup_empty_references,
     delete_application,
     delete_vacancy,
+    find_duplicate_vacancy,
     get_application,
     get_db_info,
     get_vacancy,
@@ -309,6 +310,17 @@ def main() -> None:
         if args.text_file:
             raw_text = args.text_file.read_text(encoding="utf-8")
 
+        duplicate = find_duplicate_vacancy(
+            title=args.title,
+            company=args.company,
+            source_url=args.url,
+            raw_text=raw_text,
+            db_path=args.db,
+        )
+        if duplicate is not None:
+            _print_duplicate_vacancy(duplicate, args.db)
+            return
+
         vacancy_id = add_vacancy(
             title=args.title,
             company=args.company,
@@ -328,6 +340,10 @@ def main() -> None:
 
     if args.command == "import-vacancy":
         imported = import_vacancy_file(args.path)
+        duplicate = _find_duplicate_imported_vacancy(imported, args.db)
+        if duplicate is not None:
+            _print_duplicate_vacancy(duplicate, args.db)
+            return
         vacancy_id = add_vacancy(
             title=imported.title,
             company=imported.company,
@@ -355,6 +371,10 @@ def main() -> None:
         print("Finish input with Ctrl+Z then Enter in PowerShell, or Ctrl+D in bash.")
         text = sys.stdin.read()
         imported = import_vacancy_text(text, fallback_title=args.title, source_name=args.source)
+        duplicate = _find_duplicate_imported_vacancy(imported, args.db)
+        if duplicate is not None:
+            _print_duplicate_vacancy(duplicate, args.db)
+            return
         vacancy_id = add_vacancy(
             title=imported.title,
             company=imported.company,
@@ -384,6 +404,10 @@ def main() -> None:
             print(f"Clipboard error: {error}")
             return
         imported = import_vacancy_text(text, fallback_title=args.title, source_name=args.source)
+        duplicate = _find_duplicate_imported_vacancy(imported, args.db)
+        if duplicate is not None:
+            _print_duplicate_vacancy(duplicate, args.db)
+            return
         vacancy_id = add_vacancy(
             title=imported.title,
             company=imported.company,
@@ -411,6 +435,10 @@ def main() -> None:
         print("Finish input with Ctrl+Z then Enter in PowerShell, or Ctrl+D in bash.")
         text = sys.stdin.read()
         imported = import_vacancy_text(text, fallback_title=args.title, source_name=args.source)
+        duplicate = _find_duplicate_imported_vacancy(imported, args.db)
+        if duplicate is not None:
+            _print_duplicate_vacancy(duplicate, args.db)
+            return
         vacancy_id = add_vacancy(
             title=imported.title,
             company=imported.company,
@@ -463,6 +491,10 @@ def main() -> None:
             print(f"Clipboard error: {error}")
             return
         imported = import_vacancy_text(text, fallback_title=args.title, source_name=args.source)
+        duplicate = _find_duplicate_imported_vacancy(imported, args.db)
+        if duplicate is not None:
+            _print_duplicate_vacancy(duplicate, args.db)
+            return
         vacancy_id = add_vacancy(
             title=imported.title,
             company=imported.company,
@@ -1031,6 +1063,22 @@ def _print_quick_review(vacancy_id: int, db_path: Path) -> None:
     flags = get_vacancy_flags(vacancy_id, db_path=db_path)
     requirements = get_vacancy_requirements(vacancy_id, db_path=db_path)
     print(build_quick_review(row, flags, requirements, load_profile()))
+
+
+def _find_duplicate_imported_vacancy(imported: object, db_path: Path) -> object | None:
+    return find_duplicate_vacancy(
+        title=imported.title,
+        company=imported.company,
+        source_url=imported.source_url,
+        raw_text=imported.raw_text,
+        db_path=db_path,
+    )
+
+
+def _print_duplicate_vacancy(row: object, db_path: Path) -> None:
+    print(f"Possible duplicate found: #{row['id']} {row['title']}")
+    print("No new vacancy was created.")
+    _print_vacancy_card(row["id"], db_path)
 
 
 def _print_vacancy_card(vacancy_id: int, db_path: Path) -> None:

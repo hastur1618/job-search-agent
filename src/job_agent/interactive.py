@@ -13,6 +13,7 @@ from job_agent.database import (
     cleanup_empty_references,
     delete_application,
     delete_vacancy,
+    find_duplicate_vacancy,
     get_application,
     get_vacancy,
     get_vacancy_flags,
@@ -392,6 +393,19 @@ def _paste_vacancy(db_path: Path) -> int:
 
 def _save_vacancy_text(text: str, db_path: Path) -> int:
     imported = import_vacancy_text(text)
+    duplicate = find_duplicate_vacancy(
+        title=imported.title,
+        company=imported.company,
+        source_url=imported.source_url,
+        raw_text=imported.raw_text,
+        db_path=db_path,
+    )
+    if duplicate is not None:
+        print(f"Похоже, эта вакансия уже есть: #{duplicate['id']} {duplicate['title']}")
+        print("Новая запись не создана.")
+        _show_vacancy_card(duplicate["id"], db_path)
+        return int(duplicate["id"])
+
     vacancy_id = add_vacancy(
         title=imported.title,
         company=imported.company,

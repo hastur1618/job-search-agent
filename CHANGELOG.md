@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 - Duplicate Detection
+
+- Added duplicate vacancy detection before saving imported, pasted, clipboard, and manually added vacancies.
+- Existing vacancies are now shown instead of creating another record when the source URL, full vacancy text, or title/company signature matches.
+- Added duplicate protection to both CLI and interactive workflows.
+
 ## 0.1.0 - Local MVP
 
 - Added a local SQLite tracker for vacancies, applications, requirements, flags, and contact events.

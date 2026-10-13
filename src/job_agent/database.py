@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sqlite3
 from pathlib import Path
 from typing import Any
@@ -166,6 +167,80 @@ def get_vacancy(vacancy_id: int, db_path: Path = DEFAULT_DB_PATH) -> sqlite3.Row
 
     with connect(db_path) as connection:
         return connection.execute(query, (vacancy_id,)).fetchone()
+
+
+def find_duplicate_vacancy(
+    *,
+    title: str,
+    company: str | None = None,
+    source_url: str | None = None,
+    raw_text: str | None = None,
+    db_path: Path = DEFAULT_DB_PATH,
+) -> sqlite3.Row | None:
+    normalized_title = _normalize_duplicate_text(title)
+    normalized_company = _normalize_duplicate_text(company or "")
+    normalized_raw_text = _normalize_duplicate_text(raw_text or "")
+    normalized_url = (source_url or "").strip().rstrip("/")
+
+    with connect(db_path) as connection:
+        if normalized_url:
+            row = connection.execute(
+                """
+                SELECT
+                    vacancies.id,
+                    vacancies.title,
+                    companies.name AS company,
+                    vacancies.source_url,
+                    vacancies.raw_text,
+                    vacancies.chance,
+                    vacancies.match_score,
+                    vacancies.status,
+                    vacancies.created_at
+                FROM vacancies
+                LEFT JOIN companies ON companies.id = vacancies.company_id
+                WHERE rtrim(vacancies.source_url, '/') = ?
+                ORDER BY vacancies.created_at DESC, vacancies.id DESC
+                LIMIT 1;
+                """,
+                (normalized_url,),
+            ).fetchone()
+            if row is not None:
+                return row
+
+        rows = connection.execute(
+            """
+            SELECT
+                vacancies.id,
+                vacancies.title,
+                companies.name AS company,
+                vacancies.source_url,
+                vacancies.raw_text,
+                vacancies.chance,
+                vacancies.match_score,
+                vacancies.status,
+                vacancies.created_at
+            FROM vacancies
+            LEFT JOIN companies ON companies.id = vacancies.company_id
+            ORDER BY vacancies.created_at DESC, vacancies.id DESC
+            LIMIT 200;
+            """
+        ).fetchall()
+
+    for row in rows:
+        existing_raw_text = _normalize_duplicate_text(row["raw_text"] or "")
+        if normalized_raw_text and len(normalized_raw_text) >= 40 and normalized_raw_text == existing_raw_text:
+            return row
+
+        existing_title = _normalize_duplicate_text(row["title"] or "")
+        existing_company = _normalize_duplicate_text(row["company"] or "")
+        if normalized_title and normalized_title == existing_title:
+            if normalized_company and normalized_company == existing_company:
+                return row
+            if not normalized_company and normalized_raw_text and existing_raw_text:
+                if _raw_text_overlap(normalized_raw_text, existing_raw_text):
+                    return row
+
+    return None
 
 
 def get_vacancy_flags(vacancy_id: int, db_path: Path = DEFAULT_DB_PATH) -> list[sqlite3.Row]:
@@ -695,4 +770,22 @@ def cleanup_empty_references(db_path: Path = DEFAULT_DB_PATH) -> dict[str, int]:
             """
         ).rowcount
         return {"companies": companies, "sources": sources}
+
+
+def _normalize_duplicate_text(value: str) -> str:
+    value = value.lower().replace("ё", "е")
+    value = re.sub(r"https?://\S+", " ", value)
+    value = re.sub(r"[^\wа-яА-Я]+", " ", value, flags=re.UNICODE)
+    return " ".join(value.split())
+
+
+def _raw_text_overlap(left: str, right: str) -> bool:
+    if len(left) < 40 or len(right) < 40:
+        return False
+    left_tokens = set(left.split())
+    right_tokens = set(right.split())
+    if not left_tokens or not right_tokens:
+        return False
+    overlap = len(left_tokens & right_tokens)
+    return overlap / max(len(left_tokens), len(right_tokens)) >= 0.85
 
