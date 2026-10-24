@@ -19,7 +19,7 @@
 Из папки проекта:
 
 ```powershell
-cd D:\Users\ivang\Projects\job-search-agent
+cd путь\к\job-search-agent
 .\agent.cmd
 ```
 
